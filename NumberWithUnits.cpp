@@ -43,21 +43,24 @@ namespace ariel {
             /* link the first unit to the second unit */
             NumberWithUnits::get_unit[first_unit][second_unit]=second_unit_num;
             NumberWithUnits::get_unit[second_unit][first_unit]=first_unit_num/second_unit_num;
+            /* link each unit to itself */
+            if (NumberWithUnits::get_unit[first_unit].count(first_unit)==0) {get_unit[first_unit][first_unit]=1;}
+            if (NumberWithUnits::get_unit[second_unit].count(second_unit)==0) {get_unit[second_unit][second_unit]=1;}
         }
     };
 
     //////////////////////////////////////////////////////////////////////////
     ///////////////////////// Arithmetic operators ///////////////////////////
     //////////////////////////////////////////////////////////////////////////
-    const NumberWithUnits operator-(const NumberWithUnits& a) {
+    NumberWithUnits operator-(const NumberWithUnits& a) {
         return NumberWithUnits(-a.amount, a.unit);
     }
 
-    const NumberWithUnits operator+(const NumberWithUnits& a) {
+    NumberWithUnits operator+(const NumberWithUnits& a) {
         return a;
     }
 
-    const NumberWithUnits operator+(const NumberWithUnits& a1, const NumberWithUnits& a2) {
+    NumberWithUnits operator+(const NumberWithUnits& a1, const NumberWithUnits& a2) {
         if (NumberWithUnits::get_unit.count(a1.unit)!=0&&NumberWithUnits::get_unit[a1.unit].count(a2.unit)!=0) {
             double a2_new_amount = a2.amount*NumberWithUnits::get_unit[a2.unit][a1.unit];
             return NumberWithUnits(a1.amount+a2_new_amount, a1.unit);
@@ -67,7 +70,7 @@ namespace ariel {
         throw invalid_argument(ss.str());
     }
 
-    const NumberWithUnits operator-(const NumberWithUnits& a1, const NumberWithUnits& a2) {
+    NumberWithUnits operator-(const NumberWithUnits& a1, const NumberWithUnits& a2) {
         if (NumberWithUnits::get_unit.count(a1.unit)!=0&&NumberWithUnits::get_unit[a1.unit].count(a2.unit)!=0) {
             double a2_new_amount = a2.amount*NumberWithUnits::get_unit[a2.unit][a1.unit];
             return NumberWithUnits(a1.amount-a2_new_amount, a1.unit);
@@ -138,11 +141,11 @@ namespace ariel {
     //////////////////////////////////////////////////////////////////////////
     ///////////////// Multiplication by real number operators ////////////////
     //////////////////////////////////////////////////////////////////////////
-    const NumberWithUnits operator*(double d, const NumberWithUnits& a) {
+    NumberWithUnits operator*(double d, const NumberWithUnits& a) {
         return NumberWithUnits(d*a.amount, a.unit);
     }
 
-    const NumberWithUnits operator*(const NumberWithUnits& a, double d) {
+    NumberWithUnits operator*(const NumberWithUnits& a, double d) {
         return NumberWithUnits(d*a.amount, a.unit);
     }
 
