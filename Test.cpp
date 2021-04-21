@@ -17,10 +17,15 @@ using namespace ariel;
 #include <string>
 using namespace std;
 
-
 TEST_CASE("Read_units test") {
-    ifstream units_file{"units.txt"};
-    NumberWithUnits::read_units(units_file);
+    istringstream units("1km = 1000m\n1m=100cm\n1 kg = 1000 g\n1 ton = 1000 kg\n1 hour = 60 min\n1 min = 60 sec\n1 USD = 3.33 ILS");
+    ifstream virtual_file;
+    virtual_file.basic_ios<char>::rdbuf(units.rdbuf());
+    NumberWithUnits::read_units(virtual_file);
+    istringstream special_chars_units("1WR24^$#!&=10.01@$^@#*FF\n1T-Unit = 200.3T2-Unit\n1!@#=2.67##!\n1$!@=2.2^!@#'\\\n1^!@#'\\=56.1$@!!");
+    ifstream virtual_file2;
+    virtual_file2.basic_ios<char>::rdbuf(special_chars_units.rdbuf());
+    NumberWithUnits::read_units(virtual_file2);
     /* valid units - km, m, cm, ton, kg, g, hour, min, sec, USD, ILS */
     /* Valid conversion check (different units) */
     CHECK(NumberWithUnits(1,"km") == NumberWithUnits(1000,"m"));
@@ -33,6 +38,13 @@ TEST_CASE("Read_units test") {
     CHECK(NumberWithUnits(1,"hour") == NumberWithUnits(60*60,"sec"));
     CHECK(NumberWithUnits(1,"min") == NumberWithUnits(60,"sec"));
     CHECK(NumberWithUnits(1,"USD") == NumberWithUnits(3.33,"ILS"));
+    /* Cases of a units containing numbers/special-characters */
+    CHECK(NumberWithUnits(1,"T-Unit") == NumberWithUnits(200.3,"T2-Unit"));
+    CHECK(NumberWithUnits(1,"WR24^$#!&") == NumberWithUnits(10.01,"@$^@#*FF"));
+    CHECK(NumberWithUnits(1,"!@#") == NumberWithUnits(2.67,"##!"));
+    CHECK(NumberWithUnits(1,"$!@") == NumberWithUnits(2.2,"^!@#'\\"));
+    CHECK(NumberWithUnits(1,"^!@#'\\") == NumberWithUnits(56.1,"$@!!"));
+    CHECK(NumberWithUnits(1,"$!@") == NumberWithUnits(123.42,"$@!!"));
     /* Valid conversion check (self-conversion) */
     CHECK(NumberWithUnits(1,"km") == NumberWithUnits(1,"km"));
     CHECK(NumberWithUnits(1,"m") == NumberWithUnits(1,"m"));
@@ -98,8 +110,9 @@ TEST_CASE("Read_units test") {
     CHECK_THROWS(NumberWithUnits(1,"illegal_unit1") + NumberWithUnits(1,"m"));
 }
 
-TEST_CASE("Constructor test") {
+TEST_CASE("Constructor throws test") {
     CHECK_THROWS(NumberWithUnits(1,"illegal_unit"));
+    CHECK_THROWS(NumberWithUnits(1,"!@#$%^&*()_+"));
     CHECK_THROWS(NumberWithUnits(1,"KM"));
     CHECK_THROWS(NumberWithUnits(1,"Km"));
     CHECK_THROWS(NumberWithUnits(1,"kM"));
@@ -121,43 +134,43 @@ TEST_CASE("Constructor test") {
 
 TEST_CASE("Arithmetic operators") {
     stringstream result;
-    result << +NumberWithUnits(1000,"m");
-    CHECK(result.str() == string("1000[m]"));
+    result << +NumberWithUnits(1000.2,"m");
+    CHECK(result.str() == string("1000.2[m]"));
     result.str("");
-    result << -NumberWithUnits(1000,"m");
-    CHECK(result.str() == string("-1000[m]"));
+    result << -NumberWithUnits(1000.3,"m");
+    CHECK(result.str() == string("-1000.3[m]"));
     result.str("");
-    result << NumberWithUnits(1,"km") + NumberWithUnits(1000,"m");
-    CHECK(result.str() == string("2[km]"));
+    result << NumberWithUnits(1.0001,"km") + NumberWithUnits(1000.1,"m");
+    CHECK(result.str() == string("2.0002[km]"));
     result.str("");
-    result << NumberWithUnits(1000,"m") + NumberWithUnits(1,"km");
-    CHECK(result.str() == string("2000[m]"));
+    result << NumberWithUnits(1000.4,"m") + NumberWithUnits(1.0001,"km");
+    CHECK(result.str() == string("2000.5[m]"));
     result.str("");
-    result << NumberWithUnits(1000,"km") - NumberWithUnits(1,"km");
-    CHECK(result.str() == string("999[km]"));
+    result << NumberWithUnits(1000.4,"km") - NumberWithUnits(1.001,"km");
+    CHECK(result.str() == string("999.399[km]"));
     result.str("");
-    result << NumberWithUnits(1000,"m") - NumberWithUnits(1,"km");
-    CHECK(result.str() == string("0[m]"));
+    result << NumberWithUnits(1000.2,"m") - NumberWithUnits(1.0001,"km");
+    CHECK(result.str() == string("0.1[m]"));
     result.str("");
     NumberWithUnits a(1,"km");
-    a += NumberWithUnits(1000,"m");
+    a += NumberWithUnits(1000.5,"m");
     result << a;
-    CHECK(result.str() == string("2[km]"));
+    CHECK(result.str() == string("2.0005[km]"));
     result.str("");
-    NumberWithUnits b(1000,"m");
-    b += NumberWithUnits(1,"km");
+    NumberWithUnits b(1000.4,"m");
+    b += NumberWithUnits(1.01,"km");
     result << b;
-    CHECK(result.str() == string("2000[m]"));
+    CHECK(result.str() == string("2010.4[m]"));
     result.str("");
-    NumberWithUnits c(1000,"km");
-    c -= NumberWithUnits(1,"km");
+    NumberWithUnits c(1000.2,"km");
+    c -= NumberWithUnits(1.001,"km");
     result << c;
-    CHECK(result.str() == string("999[km]"));
+    CHECK(result.str() == string("999.199[km]"));
     result.str("");
-    NumberWithUnits d(1000,"m");
-    d -= NumberWithUnits(1,"km");
+    NumberWithUnits d(1000.2,"m");
+    d -= NumberWithUnits(1.0001,"km");
     result << d;
-    CHECK(result.str() == string("0[m]"));
+    CHECK(result.str() == string("0.1[m]"));
 }
 
 TEST_CASE("Boolean operators") {

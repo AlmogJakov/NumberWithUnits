@@ -20,16 +20,12 @@ namespace ariel {
             /* remove white spaces */
             line.erase(remove_if(line.begin(), line.end(), ::isspace), line.end());
             /* get first unit */
-            size_t i = 0;
-            size_t j = 0;
-            for (j=1; j < line.length(); j++) {if(line[j]=='=') {break;}}
-            first_unit = line.substr(1, j-1);
-            /* get second unit number */
-            i=j+1;
-            for (j=line.length()-1; j >= 0; j--) {if(isdigit(line[j])!=0) {break;}}
-            second_unit_num = stod(line.substr(i,j));
-            /* get second unit */
-            second_unit = line.substr(j+1,line.length()-1);
+            size_t delim = 0;
+            for (delim=1; delim < line.length(); delim++) {if(line[delim]=='=') {break;}}
+            first_unit = line.substr(1, delim-1);
+            /* get second unit number and name */
+            stringstream ss(line.substr(delim+1,line.length()-1));
+            ss >> second_unit_num >> second_unit;
             /* link the first unit to the parentss and childs of the second unit */
             for (const auto &myPair : get_unit[second_unit]) {
                 NumberWithUnits::get_unit[first_unit][myPair.first] = second_unit_num*myPair.second;
